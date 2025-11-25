@@ -73,22 +73,12 @@ def nova_comanda():
             flash(f'Você já tem {open_count} comandas abertas. Limite por cliente: {max_allowed}.', 'warning')
             return redirect(url_for('main.minhas_comandas'))
 
-    # não atribuir codigo manualmente: banco (AUTO_INCREMENT) cuidará disso
-    comanda = Comanda(cliente_id=cliente_id, created_by=current_user.id)
-    db.session.add(comanda)
-    try:
-        db.session.commit()
-    except IntegrityError as e:
-        db.session.rollback()
-        current_app.logger.exception("IntegrityError ao criar comanda")
-        flash('Erro ao criar comanda. Tente novamente.', 'danger')
-        return redirect(url_for('main.menu'))
-    except Exception as e:
-        db.session.rollback()
-        current_app.logger.exception("Erro inesperado ao criar comanda")
-        flash('Erro ao criar comanda.', 'danger')
-        return redirect(url_for('main.menu'))
+    max_codigo = db.session.query(db.func.max(Comanda.codigo)).scalar() or 0
+    codigo = int(max_codigo) + 1
 
+    comanda = Comanda(codigo=codigo, cliente_id=cliente_id, created_by=current_user.id)
+    db.session.add(comanda)
+    db.session.commit()
     flash(f'Comanda {comanda.codigo} criada.', 'success')
     return redirect(url_for('main.visualizar_comanda', codigo=comanda.codigo))
 
