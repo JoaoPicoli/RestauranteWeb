@@ -26,17 +26,27 @@
 
     <hr>
 
-    <h4>Alterar senha (opcional)</h4>
+    <hr>
+<h4>Alterar senha (opcional)</h4>
+
+<div class="form-row">
+  {{ form.current_password.label }}<br>
+  {{ form.current_password(size=32) }}
+  {% for err in form.current_password.errors %}<div class="form-error">{{ err }}</div>{% endfor %}
+</div>
+
     <div class="form-row">
-      {{ form.new_password.label }}<br>
-      {{ form.new_password(size=32) }}
-      {% for err in form.new_password.errors %}<div class="form-error">{{ err }}</div>{% endfor %}
+    {{ form.new_password.label }}<br>
+    {{ form.new_password(size=32) }}
+    {% for err in form.new_password.errors %}<div class="form-error">{{ err }}</div>{% endfor %}
     </div>
+
     <div class="form-row">
-      {{ form.new_password2.label }}<br>
-      {{ form.new_password2(size=32) }}
-      {% for err in form.new_password2.errors %}<div class="form-error">{{ err }}</div>{% endfor %}
+    {{ form.new_password2.label }}<br>
+    {{ form.new_password2(size=32) }}
+    {% for err in form.new_password2.errors %}<div class="form-error">{{ err }}</div>{% endfor %}
     </div>
+
 
     <div class="form-actions" style="margin-top:1rem;">
       {{ form.submit(class_='btn primary') }}

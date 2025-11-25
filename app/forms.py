@@ -32,10 +32,18 @@ class RegisterForm(FlaskForm):
     submit = SubmitField('Criar conta')
 
 class EditProfileForm(FlaskForm):
-    # não permitimos editar username por simplicidade; só email/nome/contato/senha
     email = StringField('E-mail', validators=[Optional(), Email(), Length(max=120)])
     full_name = StringField('Nome completo', validators=[DataRequired(), Length(max=120)])
     contato = StringField('Contato', validators=[Optional(), Length(max=120)])
+
+    # senha atual (obrigatória somente se trocar a senha)
+    current_password = PasswordField('Senha atual', validators=[Optional()])
+
+    # nova senha
     new_password = PasswordField('Nova senha', validators=[Optional(), Length(min=6)])
-    new_password2 = PasswordField('Confirmar nova senha', validators=[Optional(), EqualTo('new_password', message='As senhas devem coincidir.')])
+    new_password2 = PasswordField('Confirmar nova senha', validators=[
+        Optional(),
+        EqualTo('new_password', message='As senhas devem coincidir.')
+    ])
+
     submit = SubmitField('Salvar alterações')

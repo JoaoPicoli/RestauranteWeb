@@ -9,7 +9,8 @@ from urllib.parse import quote_plus
 from app.forms import RegisterForm, EditProfileForm
 from app.models import User, Cliente, Role
 from flask_login import login_user
-from wtforms.validators import DataRequired, Length, Email, NumberRange, EqualTo, Optional
+from sqlalchemy.exc import IntegrityError
+
 
 main_bp = Blueprint('main', __name__, template_folder='templates')
 
@@ -72,12 +73,22 @@ def nova_comanda():
             flash(f'Você já tem {open_count} comandas abertas. Limite por cliente: {max_allowed}.', 'warning')
             return redirect(url_for('main.minhas_comandas'))
 
-    max_codigo = db.session.query(db.func.max(Comanda.codigo)).scalar() or 0
-    codigo = int(max_codigo) + 1
-
-    comanda = Comanda(codigo=codigo, cliente_id=cliente_id, created_by=current_user.id)
+    # não atribuir codigo manualmente: banco (AUTO_INCREMENT) cuidará disso
+    comanda = Comanda(cliente_id=cliente_id, created_by=current_user.id)
     db.session.add(comanda)
-    db.session.commit()
+    try:
+        db.session.commit()
+    except IntegrityError as e:
+        db.session.rollback()
+        current_app.logger.exception("IntegrityError ao criar comanda")
+        flash('Erro ao criar comanda. Tente novamente.', 'danger')
+        return redirect(url_for('main.menu'))
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.exception("Erro inesperado ao criar comanda")
+        flash('Erro ao criar comanda.', 'danger')
+        return redirect(url_for('main.menu'))
+
     flash(f'Comanda {comanda.codigo} criada.', 'success')
     return redirect(url_for('main.visualizar_comanda', codigo=comanda.codigo))
 
@@ -264,50 +275,70 @@ def register():
         return redirect(url_for('main.menu'))
 
     return render_template('register.html', form=form)
+
 @main_bp.route('/profile', methods=['GET', 'POST'])
 @login_required
 def profile():
-    """
-    Página de edição do perfil do cliente (nome, contato, email, senha opcional).
-    Se o usuário não tem um perfil Cliente, cria um automaticamente.
-    """
     form = EditProfileForm()
 
-    # garante que exista o perfil Cliente vinculado (se for cliente)
+    # garantir existência do perfil cliente
     cliente = Cliente.query.filter_by(user_id=current_user.id).first()
     if not cliente:
-        # se não existir, cria um cliente com nome vazio (ou usa username)
-        cliente = Cliente(user_id=current_user.id, nome=getattr(current_user, 'username', ''))
+        cliente = Cliente(user_id=current_user.id, nome=current_user.username)
         db.session.add(cliente)
         db.session.commit()
 
     if request.method == 'GET':
-        # popular o form com dados atuais
+        # preencher dados atuais
         form.email.data = current_user.email
         form.full_name.data = cliente.nome
         form.contato.data = cliente.contato
 
     if form.validate_on_submit():
-        # checar email único se alterou
+
+        # ===========================
+        # 1) Alteração de senha
+        # ===========================
+        new_pass = form.new_password.data
+        current_pass = form.current_password.data
+
+        if new_pass:  # se quer trocar a senha
+
+            # senha atual deve ser informada
+            if not current_pass:
+                flash('Para alterar a senha, informe a senha atual.', 'warning')
+                return render_template('profile.html', form=form)
+
+            # senha atual deve estar correta
+            if not current_user.check_password(current_pass):
+                flash('Senha atual incorreta.', 'danger')
+                return render_template('profile.html', form=form)
+
+            # agora pode alterar
+            current_user.set_password(new_pass)
+
+        # ===========================
+        # 2) Alteração de email
+        # ===========================
         new_email = form.email.data.strip() if form.email.data else None
+
         if new_email and new_email != current_user.email:
             existing = User.query.filter_by(email=new_email).first()
             if existing and existing.id != current_user.id:
                 flash('E-mail já está em uso por outro usuário.', 'warning')
                 return render_template('profile.html', form=form)
 
-        # aplicar alterações
+            current_user.email = new_email
+
+        # ===========================
+        # 3) Alteração de dados de cliente
+        # ===========================
         cliente.nome = form.full_name.data.strip()
         cliente.contato = form.contato.data.strip() if form.contato.data else None
-        current_user.email = new_email
-
-        # tratar alteração de senha (opcional)
-        new_pass = form.new_password.data
-        if new_pass:
-            current_user.set_password(new_pass)
 
         db.session.commit()
         flash('Perfil atualizado com sucesso.', 'success')
         return redirect(url_for('main.profile'))
 
     return render_template('profile.html', form=form)
+

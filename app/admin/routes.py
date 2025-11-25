@@ -1,17 +1,10 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, abort
 from flask_login import login_required, current_user
 from app import db
-from app.models import (
-    Cliente, Funcionario, ItemCardapio, Comanda, ComandaStatus, Pagamento
-)
-from app.forms import ClienteForm, ItemCardapioForm
-from decimal import Decimal
-from datetime import datetime
-from sqlalchemy.exc import IntegrityError
-
+from app.models import Cliente, Funcionario
+from app.forms import ClienteForm  # já definido no scaffold
 
 admin_bp = Blueprint('admin', __name__, template_folder='templates/admin')
-
 
 # decorator para restringir ações ao administrador/caixa
 def admin_required(func):
@@ -23,73 +16,6 @@ def admin_required(func):
             return redirect(url_for('main.menu'))
         return func(*args, **kwargs)
     return wrapper
-
-
-# --------- Itens do Cardápio (CRUD) ---------
-@admin_bp.route('/itens')
-@login_required
-@admin_required
-def listar_itens():
-    itens = ItemCardapio.query.order_by(ItemCardapio.nome).all()
-    form = ItemCardapioForm()
-    return render_template('admin/items.html', itens=itens, form=form)
-
-
-@admin_bp.route('/itens/novo', methods=['POST'])
-@login_required
-@admin_required
-def criar_item():
-    form = ItemCardapioForm()
-    if form.validate_on_submit():
-        item = ItemCardapio(
-            nome=form.nome.data,
-            descricao=form.descricao.data,
-            preco=form.preco.data,
-            disponivel=bool(form.disponivel.data),
-            categoria=form.categoria.data
-        )
-        db.session.add(item)
-        db.session.commit()
-        flash('Item cadastrado.', 'success')
-    else:
-        flash('Erro no formulário do item.', 'warning')
-    return redirect(url_for('admin.listar_itens'))
-
-
-@admin_bp.route('/itens/<int:item_id>/editar', methods=['GET', 'POST'])
-@login_required
-@admin_required
-def editar_item(item_id):
-    item = ItemCardapio.query.get_or_404(item_id)
-    form = ItemCardapioForm(obj=item)
-    if request.method == 'POST':
-        if form.validate_on_submit():
-            item.nome = form.nome.data
-            item.descricao = form.descricao.data
-            item.preco = form.preco.data
-            item.disponivel = bool(form.disponivel.data)
-            item.categoria = form.categoria.data
-            db.session.commit()
-            flash('Item atualizado.', 'success')
-            return redirect(url_for('admin.listar_itens'))
-        else:
-            flash('Erro no formulário do item.', 'warning')
-    return render_template('admin/item_edit.html', form=form, item=item)
-
-
-@admin_bp.route('/itens/<int:item_id>/excluir', methods=['POST'])
-@login_required
-@admin_required
-def excluir_item(item_id):
-    item = ItemCardapio.query.get_or_404(item_id)
-    try:
-        db.session.delete(item)
-        db.session.commit()
-        flash('Item excluído.', 'info')
-    except Exception as e:
-        db.session.rollback()
-        flash('Não foi possível excluir o item (referências existentes).', 'danger')
-    return redirect(url_for('admin.listar_itens'))
 
 
 # --------- Clientes (CRUD) ---------
@@ -212,63 +138,75 @@ def excluir_funcionario(func_id):
         flash('Não foi possível excluir o funcionário (referências existentes).', 'danger')
     return redirect(url_for('admin.listar_funcionarios'))
 
+# ----- Rotas de Itens do Cardápio (CRUD) -----
+from app.models import ItemCardapio, Comanda, ComandaStatus, Pagamento
+from app.forms import ItemCardapioForm
+from decimal import Decimal
+from datetime import datetime
 
-# ---- Comandas (admin) ----
-@admin_bp.route('/comandas')
+@admin_bp.route('/itens')
 @login_required
 @admin_required
-def listar_comandas_admin():
-    comandas = Comanda.query.order_by(Comanda.created_at.desc()).all()
-    return render_template('admin/comandas.html', comandas=comandas)
+def listar_itens():
+    itens = ItemCardapio.query.order_by(ItemCardapio.nome).all()
+    form = ItemCardapioForm()
+    return render_template('admin/items.html', itens=itens, form=form)
 
-
-@admin_bp.route('/comandas/<int:codigo>')
+@admin_bp.route('/itens/novo', methods=['POST'])
 @login_required
 @admin_required
-def visualizar_comanda_admin(codigo):
-    comanda = Comanda.query.filter_by(codigo=codigo).first_or_404()
-    total = comanda.calcular_total()
-    return render_template('admin/comanda_view.html', comanda=comanda, total=total)
-
-
-# ----- Excluir Comanda (Admin) -----
-@admin_bp.route('/comanda/<int:codigo>/excluir', methods=['POST'])
-@login_required
-@admin_required
-def excluir_comanda_admin(codigo):
-    comanda = Comanda.query.filter_by(codigo=codigo).first_or_404()
-    try:
-        # Abrir uma transação explícita
-        # Remover pagamentos relacionados (se houver)
-        if comanda.pagamento:
-            db.session.delete(comanda.pagamento)
-            db.session.flush()  # aplica mudança no contexto antes de prosseguir
-
-        # Remover itens da comanda (ItemComanda)
-        # Se você tiver relationship configurada com cascade='all, delete-orphan', isso não é estritamente necessário,
-        # mas fazemos explicitamente para evitar problemas com constraints.
-        from app.models import ItemComanda
-        itens = ItemComanda.query.filter_by(comanda_id=comanda.id).all()
-        for ic in itens:
-            db.session.delete(ic)
-        db.session.flush()
-
-        # Agora apagar a comanda
-        db.session.delete(comanda)
+def criar_item():
+    form = ItemCardapioForm()
+    if form.validate_on_submit():
+        item = ItemCardapio(
+            nome=form.nome.data,
+            descricao=form.descricao.data,
+            preco=form.preco.data,
+            disponivel=bool(form.disponivel.data),
+            categoria=form.categoria.data
+        )
+        db.session.add(item)
         db.session.commit()
-        flash(f'Comanda #{codigo} excluída pelo administrador.', 'info')
-    except IntegrityError as ie:
-        db.session.rollback()
-        # Mensagem mais específica para problemas de integridade referencial
-        flash('Não foi possível excluir a comanda por restrição de integridade no banco. Verifique dependências.', 'danger')
-        # opcional: log do erro para debug: print(ie) ou logger.exception(ie)
-    except Exception as e:
-        db.session.rollback()
-        flash('Erro ao excluir a comanda: ' + str(e), 'danger')
-    return redirect(url_for('admin.listar_comandas_admin'))
+        flash('Item cadastrado.', 'success')
+    else:
+        flash('Erro no formulário do item.', 'warning')
+    return redirect(url_for('admin.listar_itens'))
 
+@admin_bp.route('/itens/<int:item_id>/editar', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def editar_item(item_id):
+    item = ItemCardapio.query.get_or_404(item_id)
+    form = ItemCardapioForm(obj=item)
+    if request.method == 'POST':
+        if form.validate_on_submit():
+            item.nome = form.nome.data
+            item.descricao = form.descricao.data
+            item.preco = form.preco.data
+            item.disponivel = bool(form.disponivel.data)
+            item.categoria = form.categoria.data
+            db.session.commit()
+            flash('Item atualizado.', 'success')
+            return redirect(url_for('admin.listar_itens'))
+        else:
+            flash('Erro no formulário do item.', 'warning')
+    return render_template('admin/item_edit.html', form=form, item=item)
 
-# ----- Pagamento de Comanda -----
+@admin_bp.route('/itens/<int:item_id>/excluir', methods=['POST'])
+@login_required
+@admin_required
+def excluir_item(item_id):
+    item = ItemCardapio.query.get_or_404(item_id)
+    try:
+        db.session.delete(item)
+        db.session.commit()
+        flash('Item excluído.', 'info')
+    except Exception:
+        db.session.rollback()
+        flash('Não foi possível excluir o item (referências existentes).', 'danger')
+    return redirect(url_for('admin.listar_itens'))
+
+# ----- Pagamento de Comanda (já fornecido mas incluído caso precise) -----
 @admin_bp.route('/comanda/<int:codigo>/pagar', methods=['POST'])
 @login_required
 @admin_required
@@ -301,3 +239,19 @@ def pagar_comanda(codigo):
     flash(f'Pagamento registrado. Troco: R$ {troco:.2f}', 'success')
     return redirect(url_for('main.visualizar_comanda', codigo=codigo))
 
+@admin_bp.route('/comandas')
+@login_required
+@admin_required
+def listar_comandas_admin():
+    # lista todas as comandas (pode paginar depois)
+    comandas = Comanda.query.order_by(Comanda.created_at.desc()).all()
+    return render_template('admin/comandas.html', comandas=comandas)
+
+@admin_bp.route('/comandas/<int:codigo>')
+@login_required
+@admin_required
+def visualizar_comanda_admin(codigo):
+    comanda = Comanda.query.filter_by(codigo=codigo).first_or_404()
+    total = comanda.calcular_total()
+    # reutiliza o template admin específico
+    return render_template('admin/comanda_view.html', comanda=comanda, total=total)
