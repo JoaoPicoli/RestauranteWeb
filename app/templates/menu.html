@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}Cardápio{% endblock %}
+{% block content %}
+  <div style="display:flex; justify-content:space-between; align-items:center;">
+    <h2>Cardápio</h2>
+    {% if current_user.is_authenticated %}
+      <div>
+        <a class="btn" href="{{ url_for('main.nova_comanda') }}">Nova Comanda</a>
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="filters">
+    <strong>Categorias:</strong>
+    <a href="{{ url_for('main.menu') }}">Todas</a>
+    {% for cat in categorias %}
+      | <a href="{{ url_for('main.menu', categoria=cat) }}">{{ cat }}</a>
+    {% endfor %}
+  </div>
+
+  <div class="cards-grid">
+    {% for item in itens %}
+        <article class="card">
+            <header class="card-head">
+                <h3>{{ item.nome }}</h3>
+                <span class="price">R$ {{ '%.2f'|format(item.preco) }}</span>
+            </header>
+            <p class="descricao">{{ item.descricao }}</p>
+            <footer class="card-foot">
+                {% if item.disponivel %}
+
+                {# --- Botão visível apenas para clientes: adiciona diretamente à comanda aberta/cria se necessário --- #}
+                {% if current_user.is_authenticated and current_user.is_cliente() %}
+                    <form method="POST" action="{{ url_for('main.adicionar_por_cliente') }}" style="display:inline;">
+                    {% if csrf_token is defined %}
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    {% endif %}
+                    <input type="hidden" name="item_id" value="{{ item.id }}">
+                    <input type="hidden" name="quantidade" value="1">
+                    <button class="btn small" type="submit">Adicionar à comanda</button>
+                    </form>
+                {% endif %}
+
+                {# --- Link/ação que cria nova comanda a partir do item: admin OU atendente --- #}
+                {% if current_user.is_authenticated and (current_user.is_admin() or current_user.is_atendente()) %}
+                    <form method="GET" action="{{ url_for('main.nova_comanda') }}" style="display:inline;">
+                    <button class="btn small" type="submit">Abrir Comanda</button>
+                    </form>
+                {% endif %}
+
+                <small class="categoria">{{ item.categoria }}</small>
+
+                {% else %}
+                <span class="badge">Indisponível</span>
+                {% endif %}
+            </footer>
+        </article>
+
+    {% endfor %}
+  </div>
+{% endblock %}

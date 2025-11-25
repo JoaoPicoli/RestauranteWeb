@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{% block title %}Restaurante{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav">
+      <a class="brand" href="{{ url_for('main.menu') }}">🍽️ Restaurante</a>
+      <div class="nav-links">
+        <a href="{{ url_for('main.menu') }}">Cardápio</a>
+        <a href="{{ url_for('main.minhas_comandas') }}">Comandas</a>
+
+        {% if current_user.is_authenticated and (current_user.is_atendente() or current_user.is_admin()) %}
+          <a href="{{ url_for('main.nova_comanda') }}">Nova Comanda</a>
+        {% endif %}
+
+        {% if current_user.is_authenticated and (current_user.is_admin() or current_user.is_atendente()) %}
+          <a href="{{ url_for('admin.listar_itens') }}">Itens</a>
+        {% endif %}
+
+        {% if current_user.is_authenticated %}
+          <a href="{{ url_for('main.profile') }}">Meu Perfil</a>
+        {% endif %}
+      </div>
+
+      <div class="nav-user">
+        {% if current_user.is_authenticated %}
+            <span class="user">Olá, {{ current_user.username }}</span>
+            <a class="link" href="{{ url_for('main.profile') }}">Perfil</a>
+            <a class="link" href="{{ url_for('auth.logout') }}">Sair</a>
+        {% else %}
+            <a class="link" href="{{ url_for('auth.login') }}">Entrar</a>
+            <a class="link" href="{{ url_for('main.register') }}">Criar conta</a>
+        {% endif %}
+      </div>
+    </nav>
+  </header>
+
+  <main class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flashes">
+          {% for category, msg in messages %}
+            <div class="flash {{ category }}">{{ msg }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="footer">
+    <small>Trabalho Acadêmico — Sistema de Restaurante</small>
+  </footer>
+</body>
+</html>

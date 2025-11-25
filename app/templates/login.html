@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}Login{% endblock %}
+{% block content %}
+  <section class="login-box">
+    <h2>Entrar</h2>
+    <form method="POST" action="{{ url_for('auth.login') }}">
+      {{ form.hidden_tag() }}
+      <div class="form-field">
+        {{ form.username.label }}<br>
+        {{ form.username(size=32) }}
+      </div>
+      <div class="form-field">
+        {{ form.password.label }}<br>
+        {{ form.password(size=32) }}
+      </div>
+      <div class="form-actions">
+        {{ form.submit(class_='btn') }}
+      </div>
+    </form>
+  </section>
+{% endblock %}

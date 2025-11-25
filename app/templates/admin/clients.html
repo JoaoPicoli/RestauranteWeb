@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block title %}Admin — Clientes{% endblock %}
+{% block content %}
+  <h2>Clientes</h2>
+
+  <section class="novo">
+    <h3>Novo Cliente</h3>
+    <form method="POST" action="{{ url_for('admin.criar_cliente') }}">
+      {{ form.hidden_tag() }}
+      <div class="form-field">
+        {{ form.nome.label }}<br>{{ form.nome }}
+      </div>
+      <div class="form-field">
+        {{ form.contato.label }}<br>{{ form.contato }}
+      </div>
+      <div class="form-actions">
+        {{ form.submit(class_='btn') }}
+      </div>
+    </form>
+  </section>
+
+  <section class="lista">
+    <h3>Lista de Clientes</h3>
+    <table class="table">
+      <thead><tr><th>Nome</th><th>Contato</th><th>Ações</th></tr></thead>
+      <tbody>
+        {% for c in clientes %}
+          <tr>
+            <td>{{ c.nome }}</td>
+            <td>{{ c.contato }}</td>
+            <td>
+              <a class="btn small" href="{{ url_for('admin.editar_cliente', cliente_id=c.id) }}">Editar</a>
+              <form method="POST" action="{{ url_for('admin.excluir_cliente', cliente_id=c.id) }}" style="display:inline">
+                <button class="btn small danger" type="submit">Excluir</button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+{% endblock %}

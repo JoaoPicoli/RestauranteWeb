@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block title %}Comanda Admin #{{ comanda.codigo }}{% endblock %}
+{% block content %}
+  <h2>Comanda #{{ comanda.codigo }} — {{ comanda.status|capitalize }}</h2>
+
+  <div class="meta">
+    <small>Criada: {{ comanda.created_at }} {% if comanda.created_by %}por: {{ comanda.created_by }}{% endif %}</small>
+    {% if comanda.closed_at %}<small> | Fechada: {{ comanda.closed_at }} {% if comanda.closed_by %}por: {{ comanda.closed_by }}{% endif %}</small>{% endif %}
+    {% if comanda.paid_at %}<small> | Pago: {{ comanda.paid_at }} {% if comanda.paid_by %}por: {{ comanda.paid_by }}{% endif %}</small>{% endif %}
+  </div>
+
+  <section class="itens">
+    <h3>Itens</h3>
+    {% if comanda.itens|length == 0 %}
+      <p>Sem itens.</p>
+    {% else %}
+      <table class="table">
+        <thead><tr><th>Item</th><th>Qnt</th><th>Unit</th><th>Subtotal</th><th></th></tr></thead>
+        <tbody>
+          {% for ic in comanda.itens %}
+            <tr>
+              <td>{{ ic.item.nome }}</td>
+              <td>{{ ic.quantidade }}</td>
+              <td>R$ {{ '%.2f'|format(ic.preco_unitario) }}</td>
+              <td>R$ {{ '%.2f'|format(ic.total) }}</td>
+              <td>
+                <!-- admin pode remover sempre -->
+                <form method="POST" action="{{ url_for('main.remover_item', codigo=comanda.codigo, itemcomanda_id=ic.id) }}">
+                  <button class="btn small danger" type="submit">Remover</button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+    <p class="total"><strong>Total:</strong> R$ {{ '%.2f'|format(total) }}</p>
+  </section>
+
+  <section class="acoes">
+    {% if comanda.status == 'aberta' %}
+      <form method="POST" action="{{ url_for('main.fechar_comanda', codigo=comanda.codigo) }}" style="display:inline">
+        <button class="btn primary" type="submit">Fechar Comanda</button>
+      </form>
+    {% endif %}
+
+    {% if comanda.status == 'fechada' %}
+      <h4>Registrar pagamento</h4>
+      <form method="POST" action="{{ url_for('admin.pagar_comanda', codigo=comanda.codigo) }}">
+        <label>Forma</label>
+        <select name="forma">
+          <option value="dinheiro">Dinheiro</option>
+          <option value="cartao">Cartão</option>
+        </select>
+        <label>Valor recebido</label>
+        <input type="number" step="0.01" name="valor_recebido" required>
+        <button class="btn success" type="submit">Registrar Pagamento</button>
+      </form>
+    {% endif %}
+  </section>
+
+<div class="admin-actions" style="margin-top:1rem; display:flex; gap:8px; align-items:center;">
+  <a class="btn" href="{{ url_for('admin.listar_comandas_admin') }}">Voltar</a>
+
+  {% if current_user.is_admin() %}
+    <!-- Botão de excluir — usa data-codigo e não injeta variáveis dentro do JS -->
+    <form id="form-excluir-comanda"
+          method="POST"
+          action="{{ url_for('admin.excluir_comanda_admin', codigo=comanda.codigo) }}"
+          style="display:inline;">
+      <button type="submit"
+              class="btn danger"
+              data-codigo="{{ comanda.codigo }}"
+              onclick="return confirmExcluirComanda(event, this.dataset.codigo);">
+        Excluir Comanda
+      </button>
+    </form>
+  {% endif %}
+</div>
+
+<script>
+  function confirmExcluirComanda(evt, codigo) {
+    const ok = confirm('Tem certeza que deseja excluir a comanda #' + codigo + '? Essa ação é irreversível.');
+    if (!ok) {
+      evt.preventDefault();
+      return false;
+    }
+    return true;
+  }
+</script>
+
+{% endblock %}

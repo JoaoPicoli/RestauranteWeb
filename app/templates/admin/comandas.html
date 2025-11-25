@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}Admin — Comandas{% endblock %}
+{% block content %}
+  <h2>Comandas (admin)</h2>
+
+  {% if comandas|length == 0 %}
+    <p>Sem comandas cadastradas.</p>
+  {% else %}
+    <table class="table">
+      <thead>
+        <tr><th>Código</th><th>Cliente</th><th>Status</th><th>Total</th><th>Criada</th><th>Ações</th></tr>
+      </thead>
+      <tbody>
+        {% for c in comandas %}
+          <tr>
+            <td>{{ c.codigo }}</td>
+            <td>{% if c.cliente_id %}{{ c.cliente.nome }}{% else %}-{% endif %}</td>
+            <td>{{ c.status }}</td>
+            <td>R$ {{ '%.2f'|format(c.calcular_total()) }}</td>
+            <td>{{ c.created_at }}</td>
+            <td>
+              <a class="btn small" href="{{ url_for('admin.visualizar_comanda_admin', codigo=c.codigo) }}">Ver</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+{% endblock %}

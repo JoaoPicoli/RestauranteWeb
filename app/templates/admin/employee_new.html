@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block title %}Novo Funcionário{% endblock %}
+{% block content %}
+  <h2>Novo Funcionário</h2>
+  <form method="POST" action="{{ url_for('admin.criar_funcionario') }}">
+    <div class="form-field">
+      <label for="nome">Nome</label><br>
+      <input id="nome" name="nome" required>
+    </div>
+    <div class="form-field">
+      <label for="cargo">Cargo</label><br>
+      <input id="cargo" name="cargo">
+    </div>
+    <div class="form-actions">
+      <button class="btn" type="submit">Criar</button>
+      <a class="btn" href="{{ url_for('admin.listar_funcionarios') }}">Cancelar</a>
+    </div>
+  </form>
+{% endblock %}

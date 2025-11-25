@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}Editar Cliente{% endblock %}
+{% block content %}
+  <h2>Editar Cliente</h2>
+  <form method="POST" action="{{ url_for('admin.editar_cliente', cliente_id=cliente.id) }}">
+    {{ form.hidden_tag() }}
+    <div class="form-field">
+      {{ form.nome.label }}<br>{{ form.nome }}
+    </div>
+    <div class="form-field">
+      {{ form.contato.label }}<br>{{ form.contato }}
+    </div>
+    <div class="form-actions">
+      <button class="btn" type="submit">Salvar</button>
+      <a class="btn" href="{{ url_for('admin.listar_clientes') }}">Cancelar</a>
+    </div>
+  </form>
+{% endblock %}

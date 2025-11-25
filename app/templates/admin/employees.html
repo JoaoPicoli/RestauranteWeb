@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}Admin — Funcionários{% endblock %}
+{% block content %}
+  <h2>Funcionários</h2>
+
+  <div class="actions">
+    <a class="btn" href="{{ url_for('admin.criar_funcionario') }}">Novo Funcionário</a>
+  </div>
+
+  <table class="table">
+    <thead><tr><th>Nome</th><th>Cargo</th><th>Ações</th></tr></thead>
+    <tbody>
+      {% for f in funcionarios %}
+        <tr>
+          <td>{{ f.nome }}</td>
+          <td>{{ f.cargo }}</td>
+          <td>
+            <a class="btn small" href="{{ url_for('admin.editar_funcionario', func_id=f.id) }}">Editar</a>
+            <form method="POST" action="{{ url_for('admin.excluir_funcionario', func_id=f.id) }}" style="display:inline">
+              <button class="btn small danger" type="submit">Excluir</button>
+            </form>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}

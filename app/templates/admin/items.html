@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block title %}Admin — Itens{% endblock %}
+{% block content %}
+  <h2>Itens do Cardápio</h2>
+
+  <section class="novo-item">
+    <h3>Novo Item</h3>
+    <form method="POST" action="{{ url_for('admin.criar_item') }}">
+      {{ form.hidden_tag() }}
+      <div class="form-field">{{ form.nome.label }}<br>{{ form.nome }}</div>
+      <div class="form-field">{{ form.descricao.label }}<br>{{ form.descricao }}</div>
+      <div class="form-field">{{ form.preco.label }}<br>{{ form.preco }}</div>
+      <div class="form-field">{{ form.disponivel }} {{ form.disponivel.label }}</div>
+      <div class="form-field">{{ form.categoria.label }}<br>{{ form.categoria }}</div>
+      <div class="form-actions">{{ form.submit(class_='btn') }}</div>
+    </form>
+  </section>
+
+  <section class="lista-itens">
+    <h3>Lista</h3>
+    <table class="table">
+      <thead><tr><th>Nome</th><th>Preço</th><th>Disponível</th><th>Categoria</th><th>Ações</th></tr></thead>
+      <tbody>
+        {% for item in itens %}
+          <tr>
+            <td>{{ item.nome }}</td>
+            <td>R$ {{ '%.2f'|format(item.preco) }}</td>
+            <td>{{ 'Sim' if item.disponivel else 'Não' }}</td>
+            <td>{{ item.categoria }}</td>
+            <td>
+              <a class="btn small" href="{{ url_for('admin.editar_item', item_id=item.id) }}">Editar</a>
+              <form method="POST" action="{{ url_for('admin.excluir_item', item_id=item.id) }}" style="display:inline">
+                <button class="btn small danger" type="submit">Excluir</button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+{% endblock %}

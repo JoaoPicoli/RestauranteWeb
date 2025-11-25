@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}Criar Conta{% endblock %}
+{% block content %}
+  <section class="register-box">
+    <h2>Criar conta de cliente</h2>
+    <form method="POST" action="{{ url_for('main.register') }}">
+      {{ form.hidden_tag() }}
+
+      <div class="form-field">
+        {{ form.username.label }}<br>
+        {{ form.username(size=32) }}
+      </div>
+
+      <div class="form-field">
+        {{ form.email.label }}<br>
+        {{ form.email(size=64) }}
+      </div>
+
+      <div class="form-field">
+        {{ form.full_name.label }}<br>
+        {{ form.full_name(size=64) }}
+      </div>
+
+      <div class="form-field">
+        {{ form.contato.label }}<br>
+        {{ form.contato(size=32) }}
+      </div>
+
+      <div class="form-field">
+        {{ form.password.label }}<br>
+        {{ form.password(size=32) }}
+      </div>
+
+      <div class="form-field">
+        {{ form.password2.label }}<br>
+        {{ form.password2(size=32) }}
+      </div>
+
+      <div class="form-actions">
+        {{ form.submit(class_='btn') }}
+        <a class="btn" href="{{ url_for('auth.login') }}">Já tenho conta</a>
+      </div>
+    </form>
+  </section>
+{% endblock %}

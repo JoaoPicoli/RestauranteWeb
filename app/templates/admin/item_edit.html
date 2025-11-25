@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}Editar Item{% endblock %}
+{% block content %}
+  <h2>Editar Item</h2>
+  <form method="POST" action="{{ url_for('admin.editar_item', item_id=item.id) }}">
+    {{ form.hidden_tag() }}
+    <div class="form-field">{{ form.nome.label }}<br>{{ form.nome }}</div>
+    <div class="form-field">{{ form.descricao.label }}<br>{{ form.descricao }}</div>
+    <div class="form-field">{{ form.preco.label }}<br>{{ form.preco }}</div>
+    <div class="form-field">{{ form.disponivel }} {{ form.disponivel.label }}</div>
+    <div class="form-field">{{ form.categoria.label }}<br>{{ form.categoria }}</div>
+    <div class="form-actions">
+      <button class="btn" type="submit">Salvar</button>
+      <a class="btn" href="{{ url_for('admin.listar_itens') }}">Cancelar</a>
+    </div>
+  </form>
+{% endblock %}

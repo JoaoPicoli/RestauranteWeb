@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block title %}Meu Perfil{% endblock %}
+{% block content %}
+  <h2>Editar Perfil</h2>
+
+  <form method="POST" action="{{ url_for('main.profile') }}">
+    {{ form.hidden_tag() }}
+
+    <div class="form-row">
+      {{ form.full_name.label }}<br>
+      {{ form.full_name(size=50) }}
+      {% for err in form.full_name.errors %}<div class="form-error">{{ err }}</div>{% endfor %}
+    </div>
+
+    <div class="form-row">
+      {{ form.email.label }}<br>
+      {{ form.email(size=50) }}
+      {% for err in form.email.errors %}<div class="form-error">{{ err }}</div>{% endfor %}
+    </div>
+
+    <div class="form-row">
+      {{ form.contato.label }}<br>
+      {{ form.contato(size=30) }}
+      {% for err in form.contato.errors %}<div class="form-error">{{ err }}</div>{% endfor %}
+    </div>
+
+    <hr>
+
+    <h4>Alterar senha (opcional)</h4>
+    <div class="form-row">
+      {{ form.new_password.label }}<br>
+      {{ form.new_password(size=32) }}
+      {% for err in form.new_password.errors %}<div class="form-error">{{ err }}</div>{% endfor %}
+    </div>
+    <div class="form-row">
+      {{ form.new_password2.label }}<br>
+      {{ form.new_password2(size=32) }}
+      {% for err in form.new_password2.errors %}<div class="form-error">{{ err }}</div>{% endfor %}
+    </div>
+
+    <div class="form-actions" style="margin-top:1rem;">
+      {{ form.submit(class_='btn primary') }}
+      <a class="btn" href="{{ url_for('main.menu') }}">Cancelar</a>
+    </div>
+  </form>
+{% endblock %}
