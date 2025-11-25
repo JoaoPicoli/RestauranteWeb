@@ -32,6 +32,7 @@ class RegisterForm(FlaskForm):
     submit = SubmitField('Criar conta')
 
 class EditProfileForm(FlaskForm):
+    username = StringField('Usuário', validators=[DataRequired(), Length(min=3, max=80)])
     email = StringField('E-mail', validators=[Optional(), Email(), Length(max=120)])
     full_name = StringField('Nome completo', validators=[DataRequired(), Length(max=120)])
     contato = StringField('Contato', validators=[Optional(), Length(max=120)])

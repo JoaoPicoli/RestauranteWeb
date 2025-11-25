@@ -9,7 +9,7 @@
 <body>
   <header class="site-header">
     <nav class="nav">
-      <a class="brand" href="{{ url_for('main.menu') }}">🍽️ Restaurante</a>
+      <a class="brand" href="{{ url_for('main.menu') }}">Labubu Food</a>
       <div class="nav-links">
         <a href="{{ url_for('main.menu') }}">Cardápio</a>
         <a href="{{ url_for('main.minhas_comandas') }}">Comandas</a>
@@ -30,7 +30,7 @@
       <div class="nav-user">
         {% if current_user.is_authenticated %}
             <span class="user">Olá, {{ current_user.username }}</span>
-            <a class="link" href="{{ url_for('main.profile') }}">Perfil</a>
+            <a class="link" href="{{ url_for('main.profile') }}"></a>
             <a class="link" href="{{ url_for('auth.logout') }}">Sair</a>
         {% else %}
             <a class="link" href="{{ url_for('auth.login') }}">Entrar</a>
@@ -53,9 +53,5 @@
 
     {% block content %}{% endblock %}
   </main>
-
-  <footer class="footer">
-    <small>Trabalho Acadêmico — Sistema de Restaurante</small>
-  </footer>
 </body>
 </html>

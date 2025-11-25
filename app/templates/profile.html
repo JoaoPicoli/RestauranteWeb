@@ -7,6 +7,12 @@
     {{ form.hidden_tag() }}
 
     <div class="form-row">
+      {{ form.username.label }}<br>
+      {{ form.username(size=50) }}
+      {% for err in form.username.errors %}<div class="form-error">{{ err }}</div>{% endfor %}
+    </div>
+
+    <div class="form-row">
       {{ form.full_name.label }}<br>
       {{ form.full_name(size=50) }}
       {% for err in form.full_name.errors %}<div class="form-error">{{ err }}</div>{% endfor %}

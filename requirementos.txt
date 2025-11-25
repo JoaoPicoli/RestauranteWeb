@@ -11,7 +11,14 @@ Flask-Migrate alembic
 
 
 
-FLASK_ENV=development
-SECRET_KEY=troque_esta_chave_por_uma_segura
-DATABASE_URL=mysql+pymysql://user:password@localhost:3306/restaurante_db
+DATABASE_URL=mysql+pymysql://root:PUCPR@1234@localhost:3306/restaurante_db
 
+contas:
+LuizaADM
+xamueldiva
+
+atendente1
+novaSenhaAtendente123
+
+cliente1
+novaSenhaCliente123

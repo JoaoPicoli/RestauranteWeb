@@ -280,12 +280,19 @@ def profile():
 
     if request.method == 'GET':
         # preencher dados atuais
+        form.username.data = current_user.username
         form.email.data = current_user.email
         form.full_name.data = cliente.nome
         form.contato.data = cliente.contato
 
     if form.validate_on_submit():
-
+        new_username = form.username.data.strip()
+        if new_username != current_user.username:
+            existing = User.query.filter_by(username=new_username).first()
+            if existing and existing.id != current_user.id:
+                flash('Nome de usuário já está em uso.', 'warning')
+                return render_template('profile.html', form=form)
+        current_user.username = new_username
         # ===========================
         # 1) Alteração de senha
         # ===========================
@@ -330,5 +337,8 @@ def profile():
         flash('Perfil atualizado com sucesso.', 'success')
         return redirect(url_for('main.profile'))
 
+    
+
     return render_template('profile.html', form=form)
 
+    
